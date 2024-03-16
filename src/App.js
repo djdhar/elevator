@@ -16,6 +16,17 @@ async function chooseElevator() {
   }
 }
 
+async function updateElevator(elevatorId, currentFloor) {
+    try {
+      const { error } = await supabase
+                      .from('elevator')
+                      .update({ is_active: false , current_floor: currentFloor})
+                      .eq('id', elevatorId)
+    } catch (error) {
+      console.error('Error occured in updating table :', error.message);
+    }
+}
+
 function App() {
 
   const warningMessage = "Source and Destination floor should not be same!"
@@ -26,7 +37,10 @@ function App() {
   const [comment, setComment] = useState(warningMessage)
   const [display, setDisplay] = useState('')
   const [isOnboardButtonEnabled, setIsOnboardButtonEnabled] = useState(false);
-  const [isFetchButtonEnabled, setIsFetchButtonEnabled] = useState(true);
+  const [isFetchButtonEnabled, setIsFetchButtonEnabled] = useState(false);
+  const [elevatorId, setElevatorId] = useState(null)
+  const [sourceSelectionEnabled, setSourceSelectionEnabled] = useState(true)
+  const [destSelectionEnabled, setDestSelectionEnabled] = useState(true)
   const numberOfFloors = 12
 
   useEffect(function() {
@@ -59,8 +73,9 @@ function App() {
     const sourceValueChosen = event.target.value;
     setSourceValueChosen(sourceValueChosen)
     if (sourceValueChosen == destinationValueChosen) {
-      setComment('Same Value of Source and Destination can not be chosen!')
+      setComment(warningMessage)
     } else {
+      setIsFetchButtonEnabled(true)
       setComment('')
     }
   };
@@ -69,17 +84,16 @@ function App() {
     const destinationValueChosen = event.target.value;
     setDestinationValueChosen(destinationValueChosen)
     if (sourceValueChosen == destinationValueChosen) {
-      setComment('Same Value of Source and Destination can not be chosen!')
+      setComment(warningMessage)
     } else {
+      setIsFetchButtonEnabled(true)
       setComment('')
     }
   };
 
-  const elevatorSelection = (event) => {
-    
-  }
-
   const fetchElevator = async () => {
+    setSourceSelectionEnabled(false)
+    setIsFetchButtonEnabled(false)
     let elevator = await chooseElevator()
     console.log(elevator)
     let id = elevator.f_id
@@ -89,14 +103,33 @@ function App() {
     setDisplay("Elevator Id Chosen : " + id + ", " + "Elevator floor chosen : " + elevatorFloor)
     await new Promise(r => setTimeout(r, 2000));
     setDisplay("Elevator Id Chosen : " + id)
-    for(let i = elevatorFloor; i< currentFloor; i++ ) {
+    const increment = elevatorFloor < currentFloor;
+    for(let i = elevatorFloor; increment ? i < currentFloor : i > currentFloor; increment ? i++ : i-- ) {
       setDisplay("Elevator Id : " + id + ", " + "Elevator is at floor : " + i)
       await new Promise(r => setTimeout(r, 2000));
     }
     setDisplay("Elevator Id : " + id + ", " + "Elevator is at floor : " + currentFloor)
-    setIsFetchButtonEnabled(false)
+    setElevatorId(id)
     setIsOnboardButtonEnabled(true)
   }
+
+  const goDestination = async () => {
+    setDestSelectionEnabled(false)
+    setIsOnboardButtonEnabled(false)
+    let currentFloor = parseInt(sourceValueChosen)
+    let destinationFloor = parseInt(destinationValueChosen)
+    const increment = currentFloor < destinationFloor;
+    for(let i = currentFloor; increment ? i < destinationFloor : i > destinationFloor; increment ? i++ : i-- ) {
+      setDisplay("Elevator Id : " + elevatorId + ", " + "Elevator is at floor : " + i)
+      await new Promise(r => setTimeout(r, 2000));
+    }
+    setDisplay("Elevator Id : " + elevatorId + ", " + "Elevator is at floor : " + destinationFloor)
+    await updateElevator(elevatorId, destinationFloor)
+    setIsFetchButtonEnabled(true)
+    setDestSelectionEnabled(true)
+    setSourceSelectionEnabled(true)
+  }
+
 
   return (
     <div>
@@ -106,12 +139,12 @@ function App() {
       </ul>
 
       <label for="source_floors">Choose a source floor: </label>
-        <select id="source_floors" name="source_floors" onChange={handleSelectSourceFloor}>
+        <select id="source_floors" name="source_floors" onChange={handleSelectSourceFloor} disabled={!sourceSelectionEnabled}>
         {sourceFloorsElements}
         </select>
         <br></br>
         <label for="dest_floors">Choose a destination floor: </label>
-        <select id="dest_floors" name="dest_floors" onChange={handleSelectDestFloor}>
+        <select id="dest_floors" name="dest_floors" onChange={handleSelectDestFloor} disabled={!destSelectionEnabled}>
         {sourceFloorsElements}
         </select>
         <br></br>
@@ -122,7 +155,7 @@ function App() {
           {display}
         </p>
     <button disabled={!isFetchButtonEnabled} onClick={fetchElevator}>Fetch Elevator</button>
-    <button disabled={!isOnboardButtonEnabled} >Onboard?</button>
+    <button disabled={!isOnboardButtonEnabled} onClick={goDestination}>Onboard?</button>
     </div>
   );
 }
