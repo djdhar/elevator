@@ -48,8 +48,12 @@ function App() {
       let { data: elevators, error } = await supabase
       .from('elevator')
       .select('*')
-      setElevators(elevators)
-      console.log(elevators)
+
+      const sortById = (a, b) => a.id - b.id;
+      const sortedElevators = elevators.sort(sortById);
+
+      setElevators(sortedElevators)
+      console.log(sortedElevators)
     }
     getElevators()
   }, [])
