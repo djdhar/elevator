@@ -1,5 +1,21 @@
 import { useEffect, useState } from "react";
 import supabase from "./superbase";
+
+async function chooseElevator() {
+  try {
+    let elevators;
+    let found = false
+    do {
+      const { data: fetchElevators, error } = await supabase.rpc('choose_elevator')
+      if (fetchElevators.length !=0) {found = true; elevators = fetchElevators}
+      if (found == false) await new Promise(r => setTimeout(r, 2000));
+    } while(found == false)
+    return elevators[0];
+  } catch (error) {
+    console.error('Error locking record:', error.message);
+  }
+}
+
 function App() {
 
   const warningMessage = "Source and Destination floor should not be same!"
@@ -8,6 +24,9 @@ function App() {
   const [sourceValueChosen, setSourceValueChosen] = useState('0');
   const [destinationValueChosen, setDestinationValueChosen] = useState('0')
   const [comment, setComment] = useState(warningMessage)
+  const [display, setDisplay] = useState('')
+  const [isOnboardButtonEnabled, setIsOnboardButtonEnabled] = useState(false);
+  const [isFetchButtonEnabled, setIsFetchButtonEnabled] = useState(true);
   const numberOfFloors = 12
 
   useEffect(function() {
@@ -56,6 +75,29 @@ function App() {
     }
   };
 
+  const elevatorSelection = (event) => {
+    
+  }
+
+  const fetchElevator = async () => {
+    let elevator = await chooseElevator()
+    console.log(elevator)
+    let id = elevator.f_id
+    let currentFloor = parseInt(sourceValueChosen)
+    let destinationFloor = parseInt(destinationValueChosen)
+    let elevatorFloor = elevator.f_current_floor
+    setDisplay("Elevator Id Chosen : " + id + ", " + "Elevator floor chosen : " + elevatorFloor)
+    await new Promise(r => setTimeout(r, 2000));
+    setDisplay("Elevator Id Chosen : " + id)
+    for(let i = elevatorFloor; i< currentFloor; i++ ) {
+      setDisplay("Elevator Id : " + id + ", " + "Elevator is at floor : " + i)
+      await new Promise(r => setTimeout(r, 2000));
+    }
+    setDisplay("Elevator Id : " + id + ", " + "Elevator is at floor : " + currentFloor)
+    setIsFetchButtonEnabled(false)
+    setIsOnboardButtonEnabled(true)
+  }
+
   return (
     <div>
       <h1>Elevators</h1>
@@ -76,7 +118,11 @@ function App() {
         <p>
           {comment}
         </p>
-    <button>Fetch Elevator</button>
+        <p>
+          {display}
+        </p>
+    <button disabled={!isFetchButtonEnabled} onClick={fetchElevator}>Fetch Elevator</button>
+    <button disabled={!isOnboardButtonEnabled} >Onboard?</button>
     </div>
   );
 }
