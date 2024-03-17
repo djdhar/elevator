@@ -175,22 +175,28 @@ function App() {
         <div key={rowIndex+1} className="grid-row">
           {row.map((cell, colIndex) => (
             <div key={colIndex} className={getGirdClassName(sourceValueChosen, destinationValueChosen, colIndex.toString(), (1+rowIndex), elevatorLocation, elevatorId)}>
-              <span> {colIndex} </span>
+              <span>{colIndex} </span>
             </div>
           ))}
         </div>
         ))}
       </div>
 
+      <div className="selectFloor">
       <label for="source_floors">Choose a source floor: </label>
-        <select id="source_floors" name="source_floors" onChange={handleSelectSourceFloor} disabled={!sourceSelectionEnabled}>
+        <select className="floorSelection" id="source_floors" name="source_floors" onChange={handleSelectSourceFloor} disabled={!sourceSelectionEnabled}>
         {sourceFloorsElements}
         </select>
-        <br></br>
+        <button className="fetchElevator" disabled={!isFetchButtonEnabled} onClick={fetchElevator}>Fetch Elevator</button>
+      </div>
+      <div className="selectFloor">
         <label for="dest_floors">Choose a destination floor: </label>
-        <select id="dest_floors" name="dest_floors" onChange={handleSelectDestFloor} disabled={!destSelectionEnabled}>
+        <select className="floorSelection" id="dest_floors" name="dest_floors" onChange={handleSelectDestFloor} disabled={!destSelectionEnabled}>
         {sourceFloorsElements}
         </select>
+        
+        <button className="onBoard" disabled={!isOnboardButtonEnabled} onClick={goDestination}>Onboard</button>
+      </div>
         <br></br>
         <p hidden>
           {comment}
@@ -198,8 +204,7 @@ function App() {
         <p hidden>
           {display}
         </p>
-    <button disabled={!isFetchButtonEnabled} onClick={fetchElevator}>Fetch Elevator</button>
-    <button disabled={!isOnboardButtonEnabled} onClick={goDestination}>Onboard?</button>
+    
     </div>
   );
 }
