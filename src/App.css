@@ -40,6 +40,7 @@ h1 {
     justify-content: center;
     align-items: center;
     max-width: 80px;
+    border-color: black;
   }
 
   .grid-cell-elevator {
@@ -51,6 +52,7 @@ h1 {
     justify-items: center;
     justify-content: center;
     align-items: center;
+    border-color: black;
   }
   
   .grid-cell-source {
@@ -62,6 +64,7 @@ h1 {
     justify-items: center;
     justify-content: center;
     align-items: center;
+    border-color: black;
   }
   .grid-cell-dest {
     display: flex;
@@ -72,6 +75,7 @@ h1 {
     justify-items: center;
     justify-content: center;
     align-items: center;
+    border-color: black;
   }
 
   .grid-cell-source-dest {
@@ -83,6 +87,7 @@ h1 {
     justify-items: center;
     justify-content: center;
     align-items: center;
+    border-color: black;
   }
 
   /* Style for label */

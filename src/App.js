@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import supabase from "./superbase";
 import './App.css';
 
+const gridCellClasses = ['grid-cell-elevator', 'grid-cell-source-dest', 'grid-cell-source', 'grid-cell-dest', 'grid-cell']
+
 async function chooseElevator() {
   try {
     let elevators;
@@ -21,26 +23,37 @@ async function updateElevator(elevatorId, currentFloor) {
     try {
       const { error } = await supabase
                       .from('elevator')
-                      .update({ is_active: false , current_floor: currentFloor})
+                      .update({ is_active: false , current_floor: currentFloor, last_released_at:  new Date().toISOString()})
                       .eq('id', elevatorId)
     } catch (error) {
       console.error('Error occured in updating table :', error.message);
     }
 }
 
+async function onboardElevator(elevatorId) {
+  try {
+    const { error } = await supabase
+                    .from('elevator')
+                    .update({last_onboarded_at:  new Date().toISOString()})
+                    .eq('id', elevatorId)
+  } catch (error) {
+    console.error('Error occured in updating table :', error.message);
+  }
+}
+
 function getGirdClassName(sourceValueChosen, destinationValueChosen, colIndex, rowIndexPlusOne, elevatorFloor, elevatorId) {
   if (rowIndexPlusOne == elevatorId && colIndex == elevatorFloor) {
-    return 'grid-cell-elevator'
+    return gridCellClasses[0]
   }
   if( sourceValueChosen === colIndex && destinationValueChosen === colIndex) {
-    return 'grid-cell-source-dest'
+    return gridCellClasses[1]
   }
   if( sourceValueChosen === colIndex ) {
-    return 'grid-cell-source'
+    return gridCellClasses[2]
   } else if (destinationValueChosen === colIndex) {
-    return 'grid-cell-dest'
+    return gridCellClasses[3]
   } else {
-    return 'grid-cell'
+    return gridCellClasses[4]
   }
 }
 
@@ -145,6 +158,7 @@ function App() {
   const goDestination = async () => {
     setDestSelectionEnabled(false)
     setIsOnboardButtonEnabled(false)
+    onboardElevator(elevatorId)
     let currentFloor = parseInt(sourceValueChosen)
     let destinationFloor = parseInt(destinationValueChosen)
     const increment = currentFloor < destinationFloor;
@@ -153,13 +167,41 @@ function App() {
       setElevatorLocation(i)
       await new Promise(r => setTimeout(r, 1500));
     }
+    
     setDisplay("Elevator Id : " + elevatorId + ", " + "Elevator is at floor : " + destinationFloor)
     setElevatorLocation(destinationFloor)
+    await new Promise(r => setTimeout(r, 1500));
     await updateElevator(elevatorId, destinationFloor)
     setElevatorLocation(null)
     setIsFetchButtonEnabled(true)
     setDestSelectionEnabled(true)
     setSourceSelectionEnabled(true)
+  }
+
+  const findTheElevators = async () => {
+    // Select elements by key and update their styles
+    let { data: elevators, error } = await supabase
+    .from('elevator')
+    .select('*')
+
+    const sortById = (a, b) => a.id - b.id;
+    const sortedElevators = elevators.sort(sortById);
+
+    elevators.forEach(elevator => {
+      const elementToStyle = document.getElementById(elevator.current_floor+"~"+elevator.id);
+      elementToStyle.style.borderColor = 'red';
+      elementToStyle.style.borderWidth = '2px';
+    });
+  };
+
+  const hideElevators = async () => {
+    gridCellClasses.forEach(className => {
+      const elementsToStyle = document.querySelectorAll("."+className);
+      elementsToStyle.forEach(elementToStyle => {
+        elementToStyle.style.borderColor = 'black';
+        elementToStyle.style.borderWidth = '1px';
+      })
+    })
   }
 
 
@@ -174,7 +216,7 @@ function App() {
       {grid.map((row, rowIndex) => (
         <div key={rowIndex+1} className="grid-row">
           {row.map((cell, colIndex) => (
-            <div key={colIndex} className={getGirdClassName(sourceValueChosen, destinationValueChosen, colIndex.toString(), (1+rowIndex), elevatorLocation, elevatorId)}>
+            <div id={colIndex+"~"+(1+rowIndex)} key={colIndex+"~"+(1+rowIndex)} className={getGirdClassName(sourceValueChosen, destinationValueChosen, colIndex.toString(), (1+rowIndex), elevatorLocation, elevatorId)}>
               <span>{colIndex} </span>
             </div>
           ))}
@@ -187,7 +229,9 @@ function App() {
         <select className="floorSelection" id="source_floors" name="source_floors" onChange={handleSelectSourceFloor} disabled={!sourceSelectionEnabled}>
         {sourceFloorsElements}
         </select>
-        <button className="fetchElevator" disabled={!isFetchButtonEnabled} onClick={fetchElevator}>Fetch Elevator</button>
+        <button className="fetchElevator" disabled={!isFetchButtonEnabled} onClick={fetchElevator}
+        onMouseEnter={findTheElevators} onMouseLeave={hideElevators}
+        >Fetch Elevator</button>
       </div>
       <div className="selectFloor">
         <label for="dest_floors">Choose a destination floor: </label>
