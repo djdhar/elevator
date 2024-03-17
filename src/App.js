@@ -9,7 +9,7 @@ async function chooseElevator() {
     do {
       const { data: fetchElevators, error } = await supabase.rpc('choose_elevator')
       if (fetchElevators.length !=0) {found = true; elevators = fetchElevators}
-      if (found == false) await new Promise(r => setTimeout(r, 2000));
+      if (found == false) await new Promise(r => setTimeout(r, 1500));
     } while(found == false)
     return elevators[0];
   } catch (error) {
@@ -28,7 +28,10 @@ async function updateElevator(elevatorId, currentFloor) {
     }
 }
 
-function getGirdClassName(sourceValueChosen, destinationValueChosen, colIndex) {
+function getGirdClassName(sourceValueChosen, destinationValueChosen, colIndex, rowIndexPlusOne, elevatorFloor, elevatorId) {
+  if (rowIndexPlusOne == elevatorId && colIndex == elevatorFloor) {
+    return 'grid-cell-elevator'
+  }
   if( sourceValueChosen === colIndex && destinationValueChosen === colIndex) {
     return 'grid-cell-source-dest'
   }
@@ -53,6 +56,7 @@ function App() {
   const [isOnboardButtonEnabled, setIsOnboardButtonEnabled] = useState(false);
   const [isFetchButtonEnabled, setIsFetchButtonEnabled] = useState(false);
   const [elevatorId, setElevatorId] = useState(null)
+  const [elevatorLocation, setElevatorLocation] = useState(null)
   const [sourceSelectionEnabled, setSourceSelectionEnabled] = useState(true)
   const [destSelectionEnabled, setDestSelectionEnabled] = useState(true)
   const [grid, setGrid] = useState([]);
@@ -119,19 +123,22 @@ function App() {
     let elevator = await chooseElevator()
     console.log(elevator)
     let id = elevator.f_id
+    setElevatorId(id)
     let currentFloor = parseInt(sourceValueChosen)
     let destinationFloor = parseInt(destinationValueChosen)
     let elevatorFloor = elevator.f_current_floor
+    setElevatorLocation(elevatorFloor)
     setDisplay("Elevator Id Chosen : " + id + ", " + "Elevator floor chosen : " + elevatorFloor)
-    await new Promise(r => setTimeout(r, 2000));
+    await new Promise(r => setTimeout(r, 1500));
     setDisplay("Elevator Id Chosen : " + id)
     const increment = elevatorFloor < currentFloor;
     for(let i = elevatorFloor; increment ? i < currentFloor : i > currentFloor; increment ? i++ : i-- ) {
       setDisplay("Elevator Id : " + id + ", " + "Elevator is at floor : " + i)
-      await new Promise(r => setTimeout(r, 2000));
+      setElevatorLocation(i)
+      await new Promise(r => setTimeout(r, 1500));
     }
     setDisplay("Elevator Id : " + id + ", " + "Elevator is at floor : " + currentFloor)
-    setElevatorId(id)
+    setElevatorLocation(currentFloor)
     setIsOnboardButtonEnabled(true)
   }
 
@@ -143,10 +150,13 @@ function App() {
     const increment = currentFloor < destinationFloor;
     for(let i = currentFloor; increment ? i < destinationFloor : i > destinationFloor; increment ? i++ : i-- ) {
       setDisplay("Elevator Id : " + elevatorId + ", " + "Elevator is at floor : " + i)
-      await new Promise(r => setTimeout(r, 2000));
+      setElevatorLocation(i)
+      await new Promise(r => setTimeout(r, 1500));
     }
     setDisplay("Elevator Id : " + elevatorId + ", " + "Elevator is at floor : " + destinationFloor)
+    setElevatorLocation(destinationFloor)
     await updateElevator(elevatorId, destinationFloor)
+    setElevatorLocation(null)
     setIsFetchButtonEnabled(true)
     setDestSelectionEnabled(true)
     setSourceSelectionEnabled(true)
@@ -164,8 +174,8 @@ function App() {
       {grid.map((row, rowIndex) => (
         <div key={rowIndex+1} className="grid-row">
           {row.map((cell, colIndex) => (
-            <div key={colIndex} className={getGirdClassName(sourceValueChosen, destinationValueChosen, colIndex.toString())}>
-              <span> {rowIndex+1} {colIndex} </span>
+            <div key={colIndex} className={getGirdClassName(sourceValueChosen, destinationValueChosen, colIndex.toString(), (1+rowIndex), elevatorLocation, elevatorId)}>
+              <span> {colIndex} </span>
             </div>
           ))}
         </div>
@@ -182,10 +192,10 @@ function App() {
         {sourceFloorsElements}
         </select>
         <br></br>
-        <p>
+        <p hidden>
           {comment}
         </p>
-        <p>
+        <p hidden>
           {display}
         </p>
     <button disabled={!isFetchButtonEnabled} onClick={fetchElevator}>Fetch Elevator</button>

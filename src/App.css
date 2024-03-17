@@ -22,6 +22,12 @@ body {
     padding: 10px; /* padding inside each cell */
     background-color: #f0f0f0; /* background color of each cell */
   }
+
+  .grid-cell-elevator {
+    border: 1px solid #ccc; /* border around each cell */
+    padding: 10px; /* padding inside each cell */
+    background-color: #55dceb; /* background color of each cell */
+  }
   
   .grid-cell-source {
     border: 1px solid #ccc; /* border around each cell */
