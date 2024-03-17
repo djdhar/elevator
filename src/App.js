@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import supabase from "./superbase";
+import './App.css';
 
 async function chooseElevator() {
   try {
@@ -27,6 +28,19 @@ async function updateElevator(elevatorId, currentFloor) {
     }
 }
 
+function getGirdClassName(sourceValueChosen, destinationValueChosen, colIndex) {
+  if( sourceValueChosen === colIndex && destinationValueChosen === colIndex) {
+    return 'grid-cell-source-dest'
+  }
+  if( sourceValueChosen === colIndex ) {
+    return 'grid-cell-source'
+  } else if (destinationValueChosen === colIndex) {
+    return 'grid-cell-dest'
+  } else {
+    return 'grid-cell'
+  }
+}
+
 function App() {
 
   const warningMessage = "Source and Destination floor should not be same!"
@@ -41,6 +55,7 @@ function App() {
   const [elevatorId, setElevatorId] = useState(null)
   const [sourceSelectionEnabled, setSourceSelectionEnabled] = useState(true)
   const [destSelectionEnabled, setDestSelectionEnabled] = useState(true)
+  const [grid, setGrid] = useState([]);
   const numberOfFloors = 12
 
   useEffect(function() {
@@ -54,6 +69,9 @@ function App() {
 
       setElevators(sortedElevators)
       console.log(sortedElevators)
+      const initialGrid = Array.from({ length: sortedElevators.length }, () => Array.from({ length: numberOfFloors }, () => null));
+      console.log(initialGrid)
+      setGrid(initialGrid);
     }
     getElevators()
   }, [])
@@ -138,9 +156,21 @@ function App() {
   return (
     <div>
       <h1>Elevators</h1>
-      <ul>
+      <ul hidden>
         {elevatorElements}
       </ul>
+
+      <div className="grid-container">
+      {grid.map((row, rowIndex) => (
+        <div key={rowIndex+1} className="grid-row">
+          {row.map((cell, colIndex) => (
+            <div key={colIndex} className={getGirdClassName(sourceValueChosen, destinationValueChosen, colIndex.toString())}>
+              <span> {rowIndex+1} {colIndex} </span>
+            </div>
+          ))}
+        </div>
+        ))}
+      </div>
 
       <label for="source_floors">Choose a source floor: </label>
         <select id="source_floors" name="source_floors" onChange={handleSelectSourceFloor} disabled={!sourceSelectionEnabled}>
