@@ -114,7 +114,7 @@ function App() {
     if (sourceValueChosen == destinationValueChosen) {
       setComment(warningMessage)
     } else {
-      setIsFetchButtonEnabled(true)
+      if(isOnboardButtonEnabled == false) setIsFetchButtonEnabled(true)
       setComment('')
     }
   };
@@ -125,7 +125,7 @@ function App() {
     if (sourceValueChosen == destinationValueChosen) {
       setComment(warningMessage)
     } else {
-      setIsFetchButtonEnabled(true)
+      if(isOnboardButtonEnabled == false) setIsFetchButtonEnabled(true)
       setComment('')
     }
   };
@@ -133,6 +133,7 @@ function App() {
   const fetchElevator = async () => {
     setSourceSelectionEnabled(false)
     setIsFetchButtonEnabled(false)
+    setIsOnboardButtonEnabled(false)
     let elevator = await chooseElevator()
     console.log(elevator)
     let id = elevator.f_id
