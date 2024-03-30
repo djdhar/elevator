@@ -132,6 +132,7 @@ function App() {
 
   const fetchElevator = async () => {
     setSourceSelectionEnabled(false)
+    setDestSelectionEnabled(false)
     setIsFetchButtonEnabled(false)
     setIsOnboardButtonEnabled(false)
     let elevator = await chooseElevator()
@@ -154,6 +155,7 @@ function App() {
     setDisplay("Elevator Id : " + id + ", " + "Elevator is at floor : " + currentFloor)
     setElevatorLocation(currentFloor)
     setIsOnboardButtonEnabled(true)
+    setDestSelectionEnabled(true)
   }
 
   const goDestination = async () => {
